@@ -15,9 +15,9 @@
     (with-temp-buffer
       (insert "abekaten")
       (call-process-region (point-min) (point-max) "curl" t (get-buffer-create "*github-api*") nil
-                           "-s" (concat "https://api.github.com" query))))
-  (goto-char (point-min))
-  (json-read))
+                           "-s" (concat "https://api.github.com" query)))
+    (goto-char (point-min))
+    (json-read)))
 
 (defun github-repo-names ()
   (mapcar
