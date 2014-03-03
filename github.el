@@ -10,7 +10,7 @@
 (with-temp-buffer)
 
 
-(defun github-absolute-query (query)
+(defun github-absolute-query (&rest query)
   (save-excursion
     (set-buffer (get-buffer-create "*github-api*"))
     (delete-region (point-min) (point-max))
@@ -21,8 +21,8 @@
     (goto-char (point-min))
     (json-read)))
 
-(defun github-query (query)
-  (github-absolute-query (concat "https://api.github.com" query)))
+(defun github-query (&rest query)
+  (apply 'github-absolute-query "https://api.github.com" query))
 
 (defun github-repo-names ()
   (mapcar
