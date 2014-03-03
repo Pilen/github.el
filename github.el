@@ -9,16 +9,20 @@
 (set-buffer (get-buffer-create "*github-api*"))
 (with-temp-buffer)
 
-(defun github-query (query)
+
+(defun github-absolute-query (query)
   (save-excursion
     (set-buffer (get-buffer-create "*github-api*"))
     (delete-region (point-min) (point-max))
     (with-temp-buffer
       (insert "abekaten")
       (call-process-region (point-min) (point-max) "curl" t (get-buffer-create "*github-api*") nil
-                           "-s" (concat "https://api.github.com" query)))
+                           "-s" query))
     (goto-char (point-min))
     (json-read)))
+
+(defun github-query (query)
+  (github-absolute-query (concat "https://api.github.com" query)))
 
 (defun github-repo-names ()
   (mapcar
@@ -34,23 +38,39 @@
     (set-buffer (get-buffer-create "*github*"))
     (delete-region (point-min) (point-max))
     (mapcar
-     (lambda (repo)
-       (let ((name (cdr (assoc 'name repo)))
-             (pushed_at (cdr (assoc 'pushed_at repo)))
-             (open_issues (cdr (assoc 'open_issues repo))))
-         (insert (format "%-20s" name) " "
-                 ;;name "\n"
-                 "last push: " pushed_at "    "
+     (lambda (group)
+       (insert "\n" (car group) ":\n")
+       (mapcar
+        (lambda (repo)
+          (let ((name (cdr (assoc 'name repo)))
+                (pushed_at (cdr (assoc 'pushed_at repo)))
+                (open_issues (cdr (assoc 'open_issues repo))))
+            (insert (format "  %-20s" name) " "
+                    ;;name "\n"
+                    "last push: " pushed_at "    "
 
-                 (if (zerop open_issues)
-                     ""
-                   (concat (format "%6s " open_issues)
-                           (if (= 1 open_issues)
-                               "issue"
-                             "issues")))
-                 "\n\n")))
-     (github-query (concat "/users/" github-user-name "/repos?sort=updated")))))
+                    (if (zerop open_issues)
+                  1      ""
+                      (concat (format "%6s " open_issues)
+                              (if (= 1 open_issues)
+                                  "issue"
+                                "issues")))
+                    "\n\n")))
+        (cdr group)))
+     ;; create list of (Group . [repos])
+     (cons
+      ;; Users repos
+      (cons github-user-name
+            (github-query (concat "/users/" github-user-name "/repos?sort=updated")))
+      ;; Repos of all the users organizations
+      (mapcar (lambda (org)
+                (let ((name (cdr (assoc 'login org)))
+                      (url (cdr (assoc 'repos_url org))))
+                  (cons name (github-absolute-query url))))
+              (github-query (concat "/users/" github-user-name "/orgs")))))))
+
 (github-list-repos)
+(github-query "https://api.github.com/orgs/RusKursusGruppen/repos")
 
 (start-process)
 
