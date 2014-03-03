@@ -26,7 +26,7 @@
     (json-read)))
 
 (defun github-query (&rest query)
-  (apply 'github-absolute-query "https://api.github.com" query))
+  (apply 'github-absolute-query "https://api.github.com/" query))
 
 (defun github-repo-names ()
   (mapcar
