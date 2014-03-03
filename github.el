@@ -3,6 +3,8 @@
 (setq github-user-name "Pilen")
 (setq github-user-password "")
 
+(setq github-curl-max-time 10)
+
 (shell-command "echo hej")
 (get-buffer-create "*github-api*")
 (generate-new-buffer "*github-api*")
@@ -17,7 +19,9 @@
     (with-temp-buffer
       (insert "abekaten")
       (call-process-region (point-min) (point-max) "curl" t (get-buffer-create "*github-api*") nil
-                           "-s" (apply 'concat query)))
+                           "--silent"
+                           "--max-time" (int-to-string github-curl-max-time)
+                           (apply 'concat query)))
     (goto-char (point-min))
     (json-read)))
 
@@ -28,7 +32,7 @@
   (mapcar
    (lambda (repo)
      (cdr (assoc 'name repo)))
-   (github-query (concat "/users/" github-user-name "/repos"))))
+   (github-query "/users/" github-user-name "/repos")))
 
 (dolist (name (github-repo-names)) (message name))
 
@@ -61,15 +65,14 @@
      (cons
       ;; Users repos
       (cons github-user-name
-            (github-query (concat "/users/" github-user-name "/repos?sort=updated")))
+            (github-query "/users/" github-user-name "/repos?sort=updated"))
       ;; Repos of all the users organizations
       (mapcar (lambda (org)
                 (let ((name (cdr (assoc 'login org)))
                       (url (cdr (assoc 'repos_url org))))
                   (cons name (github-absolute-query url))))
-              (github-query (concat "/users/" github-user-name "/orgs")))))))
+              (github-query "/users/" github-user-name "/orgs"))))))
 
-(github-list-repos)
 (github-absolute-query "https://api.github.com/orgs/RusKursusGruppen/repos")
 
 (start-process)
@@ -79,3 +82,5 @@ oversigt:
 name
 open_issues
 pushed_at
+
+(github-list-repos)
