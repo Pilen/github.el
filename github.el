@@ -50,7 +50,7 @@
                     "last push: " pushed_at "    "
 
                     (if (zerop open_issues)
-                  1      ""
+                        ""
                       (concat (format "%6s " open_issues)
                               (if (= 1 open_issues)
                                   "issue"
@@ -70,7 +70,7 @@
               (github-query (concat "/users/" github-user-name "/orgs")))))))
 
 (github-list-repos)
-(github-query "https://api.github.com/orgs/RusKursusGruppen/repos")
+(github-absolute-query "https://api.github.com/orgs/RusKursusGruppen/repos")
 
 (start-process)
 
