@@ -17,8 +17,9 @@
     (set-buffer (get-buffer-create "*github-api*"))
     (delete-region (point-min) (point-max))
     (with-temp-buffer
-      (insert "abekaten")
+      (insert "user = " github-user-name ":" github-user-password)
       (call-process-region (point-min) (point-max) "curl" t (get-buffer-create "*github-api*") nil
+                           "--config" "-"
                            "--silent"
                            "--max-time" (int-to-string github-curl-max-time)
                            (apply 'concat query)))
