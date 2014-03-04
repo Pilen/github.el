@@ -26,7 +26,10 @@
     (json-read)))
 
 (defun github-query (&rest query)
-  (apply 'github-absolute-query "https://api.github.com/" query))
+  (apply 'github-absolute-query "https://api.github.com"
+         (when (not (string-prefix-p "/" (car query)))
+           "/")
+             query))
 
 (defun github-repo-names ()
   (mapcar
