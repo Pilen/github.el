@@ -147,7 +147,8 @@
 
 
 
-(let ((full_name "RusKursusGruppen/GRIS"))
+(let ;((full_name "RusKursusGruppen/GRIS"))
+    ((full_name "Pilen/github.el"))
   (set-buffer (get-buffer-create (concat "*github: " full_name "/issues*")))
   (delete-region (point-min) (point-max))
   (mapcar (lambda (issue)
@@ -163,15 +164,18 @@
                    (user (cdr (assoc 'user issue)))
                    (labels (cdr (assoc 'labels issue)))
                    (url (cdr (assoc 'url issue)))
+                   (milestone (cdr (assoc 'milestone issue)))
 
                    )
 
               (insert
                "#" (int-to-string number) ": " title "\n"
-               (mapconcat (lambda (label) (cdr (assoc 'name label))) labels ", ") "\n"
+               (if (zerop (length labels)) "(unlabeled)"
+                 (mapconcat (lambda (label) (concat "[" (cdr (assoc 'name label)) "]")) labels ", "))
+               (if (null milestone) "" (concat " ~ milestone: " (cdr (assoc 'title milestone)))) "" "\n"
                "Created by " (cdr (assoc 'login user)) " " created_at
-               (if (null assignee) "" (concat "assignee: " assignee))
-               (if (zerop comments) "" "\uf09f92ac"\n"
+               (if (null assignee) "" (concat " assigned to: " (cdr (assoc 'login assignee)))) ""
+               (if (zerop comments) "" (concat ", " (int-to-string comments) " comment" (when (> comments 1) "s"))) "\n"
                "\n"
                )
               ))
