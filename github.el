@@ -17,26 +17,29 @@
 
 (setq github-horizontal-line (github-horizontal-line ""))
 
-(defun github-absolute-query (&rest query)
+(defun github-absolute-query (query)
   (save-excursion
     (set-buffer (get-buffer-create "*github-api*"))
     (delete-region (point-min) (point-max))
-    (if (not (with-temp-buffer
-               (insert "user = " github-user-name ":" github-user-password)
-               (call-process-region (point-min) (point-max) "curl" t (get-buffer-create "*github-api*") nil
-                                    "--config" "-"
-                                    "--silent"
-                                    "--max-time" (int-to-string github-curl-max-time)
-                                    (apply 'concat query))))
-        nil
-      (goto-char (point-min))
-      (json-read))))
+    (if (with-temp-buffer
+          (insert "user = " github-user-name ":" github-user-password)
+          (call-process-region (point-min) (point-max) "curl" t (get-buffer-create "*github-api*") nil
+                               "--config" "-"
+                               "--silent"
+                               "--max-time" (int-to-string github-curl-max-time)
+                               query))
+        (progn
+          (goto-char (point-min))
+          (json-read))
+      (message "Connection to github.com went wrong")
+      nil)))
+
 
 (defun github-query (&rest query)
-  (apply 'github-absolute-query "https://api.github.com"
-         (when (not (string-prefix-p "/" (car query)))
-           "/")
-             query))
+  (github-absolute-query
+   (concat "https://api.github.com"
+           (when (not (string-prefix-p "/" (car query))) "/")
+           (apply 'concat query))))
 
 (defun github-repo-names ()
   (mapcar
