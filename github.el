@@ -12,6 +12,10 @@
 (set-buffer (get-buffer-create "*github-api*"))
 (with-temp-buffer)
 
+(defun github-horizontal-line (start)
+  (concat start (make-string (- 79 (length start)) ?_) "\n"))
+
+(setq github-horizontal-line (github-horizontal-line ""))
 
 (defun github-absolute-query (&rest query)
   (save-excursion
@@ -160,6 +164,7 @@
                    (created_at (cdr (assoc 'created_at issue)))
                    (updated_at (cdr (assoc 'updated_at issue)))
                    (closed_at (cdr (assoc 'closed_at issue)))
+                   (closed_by (cdr (assoc 'closed_by issue)))
                    (body (cdr (assoc 'body issue)))
                    (user (cdr (assoc 'user issue)))
                    (labels (cdr (assoc 'labels issue)))
@@ -182,7 +187,83 @@
           (github-query "repos/" full_name "/issues" "?sort=" github-issues-sorting ";state=open")
         ))
 
-(github-query "repos/" "RusKursusGruppen/GRIS" "/issues" "?sort=" github-issues-sorting ";state=closed")
+(let ;((full_name "Pilen/github.el")
+    ((full_name "RusKursusGruppen/GRIS")
+      (number 37))
+  (set-buffer (get-buffer-create (concat "*github: " full_name "/issue/" (int-to-string number) "*")))
+  (delete-region (point-min) (point-max))
+  (let* ((issue (github-query "repos/" full_name "/issues/" (int-to-string number)))
+                   (title (cdr (assoc 'title issue)))
+                   (state (cdr (assoc 'state issue)))
+                   (assignee (cdr (assoc 'assignee issue)))
+                   (comments (cdr (assoc 'comments issue)))
+                   (created_at (cdr (assoc 'created_at issue)))
+                   (updated_at (cdr (assoc 'updated_at issue)))
+                   (closed_at (cdr (assoc 'closed_at issue)))
+                   (closed_by (cdr (assoc 'closed_by issue)))
+                   (body (cdr (assoc 'body issue)))
+                   (user (cdr (assoc 'user issue)))
+                   (labels (cdr (assoc 'labels issue)))
+                   (url (cdr (assoc 'url issue)))
+                   (milestone (cdr (assoc 'milestone issue)))
+                   )
+
+    (insert
+     "#" (int-to-string number) ": " title "\n"
+     (if (zerop (length labels)) "(unlabeled)"
+       (mapconcat (lambda (label) (concat "[" (cdr (assoc 'name label)) "]")) labels ", "))
+     "\n"
+     (if (null milestone) "" (concat "milestone: " (cdr (assoc 'title milestone)))) "" "\n"
+     "Created by " (cdr (assoc 'login user)) " " created_at
+     (if (null assignee) "" (concat " assigned to: " (cdr (assoc 'login assignee)))) "\n"
+     (if (zerop comments) "" (concat (int-to-string comments) " comment" (when (> comments 1) "s"))) "\n"
+     "\n\n"
+     (github-horizontal-line "Description:" )
+     body "\n"
+     github-horizontal-line
+     "\n"
+     )
+
+    (mapcar
+     (lambda (item)
+       (if (null (assoc 'body item))
+           (progn ;event
+             (let ((actor (cdr (assoc 'actor item)))
+                   (event (cdr (assoc 'event item)))
+                   (commit_id (cdr (assoc 'commit_id item)))
+                   (created_at (cdr (assoc 'created_at item))))
+               (insert
+                (cdr (assoc 'login actor)) " " event " this at " created_at "\n"
+                (if (not (null commit_id)) (concat "in commit #" commit_id "\n") "")
+                "\n\n"
+                )
+             ))
+         (progn ;comment
+           (let ((user (cdr (assoc 'user item)))
+                 (created_at (cdr (assoc 'created_at item)))
+                 (updated_at (cdr (assoc 'updated_at item)))
+                 (body (cdr (assoc 'body item))))
+             (insert
+              (github-horizontal-line (concat (cdr (assoc 'login user)) ":" ))
+              created_at " " updated_at "\n"
+              body
+              "\n"
+              github-horizontal-line
+              "\n\n"
+             )))))
+     (sort
+      (nconc
+       (mapcar 'identity (github-query "repos/RusKursusGruppen/GRIS/issues/38/comments"))
+       (mapcar 'identity (github-query "repos/RusKursusGruppen/GRIS/issues/38/events")))
+      (lambda (x y)
+        (let ((xt (cdr (assoc 'created_at x)))
+              (yt (cdr (assoc 'created_at y))))
+          (string-lessp xt yt)))))
+    ))
+
+
+
+(github-query "repos/" "RusKursusGruppen/GRIS" "/issues" "?sort=" github-issues-sorting ";state=open;since=2014-02-16T16:35:17Z")
 
 
 https://api.github.com/repos/RusKursusGruppen/gris/issues
