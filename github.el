@@ -2,6 +2,7 @@
 (setq github-cache-directory "~/.emacs.d/github-cache/")
 (setq github-user-name "Pilen")
 (setq github-user-password "")
+(setq github-issues-sorting "updated")
 
 (setq github-curl-max-time 10)
 
@@ -145,6 +146,42 @@
  (github-repo "RusKursusGruppen/GRIS"))
 
 
+
+(let ((full_name "RusKursusGruppen/GRIS"))
+  (set-buffer (get-buffer-create (concat "*github: " full_name "/issues*")))
+  (delete-region (point-min) (point-max))
+  (mapcar (lambda (issue)
+            (let* ((number (cdr (assoc 'number issue)))
+                   (title (cdr (assoc 'title issue)))
+                   (state (cdr (assoc 'state issue)))
+                   (assignee (cdr (assoc 'assignee issue)))
+                   (comments (cdr (assoc 'comments issue)))
+                   (created_at (cdr (assoc 'created_at issue)))
+                   (updated_at (cdr (assoc 'updated_at issue)))
+                   (closed_at (cdr (assoc 'closed_at issue)))
+                   (body (cdr (assoc 'body issue)))
+                   (user (cdr (assoc 'user issue)))
+                   (labels (cdr (assoc 'labels issue)))
+                   (url (cdr (assoc 'url issue)))
+
+                   )
+
+              (insert
+               "#" (int-to-string number) ": " title "\n"
+               (mapconcat (lambda (label) (cdr (assoc 'name label))) labels ", ") "\n"
+               "Created by " (cdr (assoc 'login user)) " " created_at
+               (if (null assignee) "" (concat "assignee: " assignee))
+               (if (zerop comments) "" "\uf09f92ac"\n"
+               "\n"
+               )
+              ))
+          (github-query "repos/" full_name "/issues" "?sort=" github-issues-sorting ";state=open")
+        ))
+
+(github-query "repos/" "RusKursusGruppen/GRIS" "/issues" "?sort=" github-issues-sorting ";state=closed")
+
+
+https://api.github.com/repos/RusKursusGruppen/gris/issues
 
 (github-absolute-query "https://api.github.com/orgs/RusKursusGruppen/repos")
 
