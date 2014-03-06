@@ -28,18 +28,20 @@
   (save-excursion
     (set-buffer (get-buffer-create "*github-api*"))
     (delete-region (point-min) (point-max))
-    (if (with-temp-buffer
-          (insert "user = " github-user-name ":" github-user-password)
-          (call-process-region (point-min) (point-max) "curl" t (get-buffer-create "*github-api*") nil
-                               "--config" "-"
-                               "--silent"
-                               "--max-time" (int-to-string github-curl-max-time)
-                               query))
+    (if (zerop (with-temp-buffer
+                 (insert "user = " github-user-name ":" github-user-password)
+                 (call-process-region (point-min) (point-max) "curl" t (get-buffer-create "*github-api*") nil
+                                      "--config" "-"
+                                      "--silent"
+                                      "--max-time" (int-to-string github-curl-max-time)
+                                      query)))
         (progn
+          (write-file (github-filename query))
           (goto-char (point-min))
           (json-read))
       (message "Connection to github.com went wrong")
-      nil)))
+      (github-cached-query query))))
+(github-absolute-query "https://api.github.com/users/Pilen/repos")
 
 
 (defun github-query (&rest query)
