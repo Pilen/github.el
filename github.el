@@ -18,10 +18,11 @@
 (setq github-horizontal-line (github-horizontal-line ""))
 
 (defun github-filename (query)
-  (concat (file-name-as-directory github-cache-directory)
-          (replace-regexp-in-string "/" "|" (if (string-prefix-p "/" query)
-                                                (substring query 1)
-                                              query))))
+  (let ((filename (replace-regexp-in-string "https://api.github.com" "" query)))
+    (concat (file-name-as-directory github-cache-directory)
+            (replace-regexp-in-string "/" "|" (if (string-prefix-p "/" filename)
+                                                  (substring filename 1)
+                                                filename)))))
 
 (defun github-absolute-query (query)
   (save-excursion
@@ -51,7 +52,6 @@
 (defun github-cached-query (&rest query)
   (with-temp-buffer
     (let ((filename (github-filename (apply 'concat query ))))
-      (message filename)
       (if (file-exists-p filename)
           (progn
             (insert-file-contents filename)
