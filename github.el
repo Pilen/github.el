@@ -17,6 +17,12 @@
 
 (setq github-horizontal-line (github-horizontal-line ""))
 
+(defun github-filename (query)
+  (concat (file-name-as-directory github-cache-directory)
+          (replace-regexp-in-string "/" "|" (if (string-prefix-p "/" query)
+                                                (substring query 1)
+                                              query))))
+
 (defun github-absolute-query (query)
   (save-excursion
     (set-buffer (get-buffer-create "*github-api*"))
@@ -40,6 +46,18 @@
    (concat "https://api.github.com"
            (when (not (string-prefix-p "/" (car query))) "/")
            (apply 'concat query))))
+
+
+(defun github-cached-query (&rest query)
+  (with-temp-buffer
+    (let ((filename (github-filename (apply 'concat query ))))
+      (message filename)
+      (if (file-exists-p filename)
+          (progn
+            (insert-file-contents filename)
+            (json-read))
+        (message "No cached version exists")
+        nil))))
 
 (defun github-repo-names ()
   (mapcar
