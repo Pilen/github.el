@@ -75,7 +75,7 @@
                             (buffer-string))))
          (since (if (null latest_update) "" (concat ";since=" latest_update)))
          (updated_at (cdr (assoc 'updated_at (github-query "repos/" full_name))))
-         (issues (github-query "repos/" full_name "/issues" "?sort=" github-issues-sorting since)))
+         (issues (github-query "repos/" full_name "/issues" "?sort=" github-issues-sorting since ";state=all")))
 
     (github-query "repos/" full_name "/branches")
 
