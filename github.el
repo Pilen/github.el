@@ -36,7 +36,7 @@
                                       "--max-time" (int-to-string github-curl-max-time)
                                       query)))
         (progn
-          (write-file (github-filename query))
+          (write-region (point-min) (point-max) (github-filename query))
           (goto-char (point-min))
           (json-read))
       (message "Connection to github.com went wrong")
@@ -60,6 +60,23 @@
             (json-read))
         (message "No cached version exists")
         nil))))
+
+(defun github-update-repo ()
+)
+(let ((full_name "RusKursusGruppen/gris"))
+  (github-query "repos/" full_name)
+  (github-query "repos/" full_name "/branches")
+
+  (mapcar (lambda (issue)
+            (let ((number (cdr (assoc 'number issue))))
+              (github-query "repos/" full_name "/issues/" (int-to-string number) "/comments")
+              (github-query "repos/" full_name "/issues/" (int-to-string number) "/events")))
+          (github-query "repos/" full_name "/issues" "?sort=" github-issues-sorting))
+  )
+  ;; (github-query "repos/" full_name "/issues/" (int-to-string number))
+  ;; (github-query "repos/RusKursusGruppen/GRIS/issues/38/comments")
+  ;; (github-query "repos/RusKursusGruppen/GRIS/issues/38/events"))
+
 
 (defun github-repo-names ()
   (mapcar
