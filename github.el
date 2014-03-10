@@ -1,5 +1,6 @@
 
 (setq github-cache-directory "~/.emacs.d/github-cache/")
+(setq github-cache-directory "~/code/emacs/github/cache")
 (setq github-user-name "Pilen")
 (setq github-user-password "")
 (setq github-issues-sorting "updated")
@@ -19,10 +20,12 @@
 
 (defun github-filename (query)
   (let ((filename (replace-regexp-in-string "https://api.github.com" "" query)))
-    (concat (file-name-as-directory github-cache-directory)
-            (replace-regexp-in-string "/" "|" (if (string-prefix-p "/" filename)
-                                                  (substring filename 1)
-                                                filename)))))
+    (if (file-exists-p github-cache-directory)
+        (concat (file-name-as-directory github-cache-directory)
+                (replace-regexp-in-string "/" "|" (if (string-prefix-p "/" filename)
+                                                      (substring filename 1)
+                                                    filename)))
+      (error "Cache directory does not exist: %s" github-cache-directory))))
 
 (defun github-absolute-query (query)
   (save-excursion
