@@ -61,10 +61,12 @@
         (message "No cached version exists")
         nil))))
 
-(defun github-update-repo ()
+(defun github-update-repo (full_name)
 )
 (let ((full_name "RusKursusGruppen/gris"))
-  (github-query "repos/" full_name)
+  (let ((updated_at (cdr (assoc 'updated_at (github-query "repos/" full_name)))))
+    (with-temp-file (github-filename (concat "updated_at/" full_name))
+      (insert updated_at)))
   (github-query "repos/" full_name "/branches")
 
   (mapcar (lambda (issue)
