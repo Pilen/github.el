@@ -63,22 +63,28 @@
 
 (defun github-update-repo (full_name)
 )
-(let ((full_name "RusKursusGruppen/gris"))
-  (let ((updated_at (cdr (assoc 'updated_at (github-query "repos/" full_name)))))
+(let ((full_name "Pilen/github.el"))
+  (let* ((filename (github-filename (concat "updated_at/" full_name)))
+         (latest_update (if (not (file-exists-p filename))
+                            nil
+                          (with-temp-buffer
+                            (insert-file-contents filename)
+                            (buffer-string))))
+         (since (if (null latest_update) "" (concat ";since=" latest_update)))
+         (updated_at (cdr (assoc 'updated_at (github-query "repos/" full_name))))
+         (issues (github-query "repos/" full_name "/issues" "?sort=" github-issues-sorting since)))
+
+    (github-query "repos/" full_name "/branches")
+
+    (mapcar (lambda (issue)
+              (let ((number (cdr (assoc 'number issue))))
+                (github-query "repos/" full_name "/issues/" (int-to-string number) "/comments")
+                (github-query "repos/" full_name "/issues/" (int-to-string number) "/events")))
+            issues)
+
     (with-temp-file (github-filename (concat "updated_at/" full_name))
-      (insert updated_at)))
-  (github-query "repos/" full_name "/branches")
-
-  (mapcar (lambda (issue)
-            (let ((number (cdr (assoc 'number issue))))
-              (github-query "repos/" full_name "/issues/" (int-to-string number) "/comments")
-              (github-query "repos/" full_name "/issues/" (int-to-string number) "/events")))
-          (github-query "repos/" full_name "/issues" "?sort=" github-issues-sorting))
-  )
-  ;; (github-query "repos/" full_name "/issues/" (int-to-string number))
-  ;; (github-query "repos/RusKursusGruppen/GRIS/issues/38/comments")
-  ;; (github-query "repos/RusKursusGruppen/GRIS/issues/38/events"))
-
+      (insert updated_at))
+  ))
 
 (defun github-repo-names ()
   (mapcar
